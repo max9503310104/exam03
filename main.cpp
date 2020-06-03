@@ -38,6 +38,8 @@ RawSerial xbee(D12, D11);
 
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread th;
+Thread thXBee(osPriorityHigh);
+EventQueue queueXBee(32 * EVENTS_EVENT_SIZE);
 
 //RpcDigitalOut myled1(LED1,"myled1");
 //RpcDigitalOut myled2(LED2,"myled2");
@@ -45,6 +47,7 @@ Thread th;
 void acc(Arguments *in, Reply *out);
 RPCFunction sned_acc(&acc, "acc");
 void velocity(void);
+void print_v(void);
 
 void xbee_rx_interrupt(void);
 void xbee_rx(void);
@@ -101,6 +104,7 @@ int main(){
   // start
   pc.printf("start\r\n");
   th.start(callback(&queue, &EventQueue::dispatch_forever));
+  thXBee.start(callback(&queueXBee, &EventQueue::dispatch_forever));
 
   // Setup a serial interrupt function of receiving data from xbee
   xbee.attach(xbee_rx_interrupt, Serial::RxIrq);
@@ -165,7 +169,13 @@ void check_addr(char *xbee_reply, char *messenger){
 void acc(Arguments *in, Reply *out)
 {
 
-      xbee.printf("%5.2f", v);
+      //xbee.printf("%5.2f", v);
+      queueXBee.call(&print_v);
+
+}
+void print_v(void)
+{
+    xbee.printf("%5.2f", v);
 
 }
 void velocity(void)
